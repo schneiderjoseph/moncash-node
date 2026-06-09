@@ -95,6 +95,36 @@ const result = await moncash.transfert.create({
 
 > `moncash.transfer` is a deprecated alias for `moncash.transfert`.
 
+## Pay with MonCash Button
+
+The SDK ships the official MonCash payment button image. After `npm install`, use it in your frontend:
+
+```js
+const Moncash = require('@zygrec/moncash');
+const path = require('path');
+const express = require('express');
+
+// Serve the button (Express example)
+app.get('/moncash-button.png', (req, res) => {
+  res.sendFile(Moncash.getButtonPath());
+});
+```
+
+```html
+<form method="POST" action="/pay">
+  <button type="submit" style="background:none;border:none;padding:0;cursor:pointer">
+    <img src="/moncash-button.png" alt="Pay with MonCash" height="48">
+  </button>
+</form>
+```
+
+Or copy the file into your static folder:
+
+```js
+const fs = require('fs');
+fs.copyFileSync(Moncash.getButtonPath(), './public/moncash-button.png');
+```
+
 ## Configuration
 
 | Option         | Type     | Required | Description                          |

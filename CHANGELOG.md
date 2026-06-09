@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.1] - 2026-06-09
+
+### Added
+
+- Official "Pay with MonCash" button image in `assets/moncash-button.png`
+- `Moncash.getButtonPath()` to resolve the button path in consuming apps
+- `files` field in `package.json` to exclude tests and dev tooling from npm tarball
+
 ## [1.0.0] - 2026-06-09
 
 ### Security
