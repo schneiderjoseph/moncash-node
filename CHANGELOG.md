@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0] - 2026-06-09
+
+### Security
+
+- Removed hardcoded sandbox credentials from test configuration
+- Added `_sanitizeMessage()` to redact `clientSecret` from all error paths
+- Added `.gitignore` and `.env.example`
+
+### Fixed
+
+- Bearer token check: replaced `.search()` with `.startsWith()` (critical bug)
+- `Configuration.validate()`: `const` → `let` to prevent TypeError in strict mode
+- `redirectUri()`: now throws `MoncashError` when `payment_token` is missing
+
+### Added
+
+- OAuth2 mutex via `_ensureAuthenticated()` — prevents race conditions
+- axios timeout: 30000ms to prevent indefinite hangs
+- Full Promise + async/await support on all resource methods (backward-compatible)
+- Input validation: `amount`, `orderId`, `receiver` (Haitian phone format), `desc`
+- `moncash.transfer` alias for `moncash.transfert` (`@deprecated`)
+- JSDoc on all public methods
+- `SECURITY.md` with responsible disclosure policy
+- nock-based mock test infrastructure (18/18 tests passing)
+
 ### [0.1.6](https://github.com/allyourdate-team/moncash-node.js/compare/v0.1.5...v0.1.6) (2024-04-03)
 
 

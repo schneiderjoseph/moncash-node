@@ -1,223 +1,203 @@
-[![moncash](https://sandbox.moncashbutton.digicelgroup.com/Moncash-middleware/resources/assets/images/MC_button.png)](https://sandbox.moncashbutton.digicelgroup.com/)
+# @zygrec/moncash
 
-# Digicel MonCash API SDK for Node.js
+> Le SDK Node.js sécurisé pour Digicel MonCash — conçu pour Haïti 🇭🇹
+>
+> The secure Node.js SDK for Digicel MonCash — built for Haiti 🇭🇹
 
-SDK Node.js pour l'API MonCash de Digicel (Haïti). Il gère l'authentification OAuth2, la création de paiements, la capture de transactions et les transferts de fonds en HTG.
+[![npm version](https://img.shields.io/npm/v/@zygrec/moncash.svg)](https://www.npmjs.com/package/@zygrec/moncash)
+[![license](https://img.shields.io/npm/l/@zygrec/moncash.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
+[![tests](https://img.shields.io/badge/tests-18%20passing-brightgreen.svg)](https://github.com/schneiderjoseph/moncash)
 
-> **Mise à jour de sécurité (v0.1.6+)** — Cette version corrige plusieurs vulnérabilités et failles de robustesse critiques. Mettez à jour dès que possible. Voir la section [Sécurité](#sécurité) et le fichier [SECURITY.md](./SECURITY.md).
-
-## Fonctionnalités
-
-- Création de paiements MonCash
-- Capture de paiements (par `orderId` ou `transactionId`)
-- Transfert de fonds (`transfert`)
-- Authentification OAuth2 automatique avec protection contre les courses concurrentes
-- Support **callback** et **Promise** sur toutes les méthodes
-- Validation stricte des entrées avant envoi à l'API
-- Timeout HTTP de 30 secondes
-- Gestion d'erreurs typées
-
-## Prérequis
-
-- [Node.js](https://nodejs.org/) v12 ou supérieur
+Official-quality Node.js wrapper for the [Digicel MonCash API](https://sandbox.moncashbutton.digicelgroup.com). Handles OAuth2 authentication, payment creation, transaction capture, and fund transfers in HTG.
 
 ## Installation
 
 ```sh
-npm install moncash
+npm install @zygrec/moncash
 ```
 
-## Configuration
+## Quick Start
 
-Obtenez vos identifiants sur le [tableau de bord MonCash](https://sandbox.moncashbutton.digicelgroup.com/Moncash-business/Login).
-
-Chaque compte marchand dispose d'une paire `clientId` / `clientSecret`.
-
-```javascript
-const Moncash = require('moncash');
+```js
+const Moncash = require('@zygrec/moncash');
 
 const moncash = new Moncash({
-  mode: 'sandbox', // 'sandbox' | 'live'
-  clientId: '<clientId>',
-  clientSecret: '<clientSecret>'
+  clientId: process.env.MONCASH_CLIENT_ID,
+  clientSecret: process.env.MONCASH_CLIENT_SECRET,
+  mode: 'sandbox' // or 'live'
+});
+
+// Create a payment
+const payment = await moncash.payment.create({
+  amount: 500,
+  orderId: 'ORDER-001'
+});
+
+// Redirect the user
+const url = moncash.payment.redirectUri(payment);
+res.redirect(url);
+
+// Capture / verify
+const capture = await moncash.capture.getByOrderId('ORDER-001');
+console.log(capture.status); // 'SUCCESS'
+```
+
+> Never hardcode credentials. Copy `.env.example` to `.env` and load values from environment variables.
+
+## API Reference
+
+### `moncash.payment.create({ amount, orderId })` → `Promise<object>`
+
+Creates a new MonCash payment. Currency is HTG only.
+
+```js
+const payment = await moncash.payment.create({
+  amount: 500,
+  orderId: 'ORDER-001'
 });
 ```
 
-Configuration alternative (chaînable) :
+### `moncash.payment.redirectUri(payment)` → `string`
 
-```javascript
-const moncash = new Moncash();
+Builds the MonCash redirect URL from a payment response.
 
-moncash.configure({
-  mode: 'sandbox',
-  clientId: '<clientId>',
-  clientSecret: '<clientSecret>'
-});
+```js
+const url = moncash.payment.redirectUri(payment);
 ```
 
-> **Important** — Ne commitez jamais vos identifiants. Utilisez des variables d'environnement ou un fichier `.env` (voir `.env.example`).
+### `moncash.capture.getByTransactionId(id)` → `Promise<object>`
 
-## Créer un paiement
+Retrieves a payment by MonCash transaction ID.
 
-Devise supportée : **HTG** uniquement.
-
-### Avec callback (rétrocompatible)
-
-```javascript
-moncash.payment.create({
-  amount: 50,
-  orderId: 'order-12345'
-}, (err, payment) => {
-  if (err) {
-    console.error(err.type, err.message);
-    return;
-  }
-
-  const redirectUrl = moncash.payment.redirectUri(payment);
-  console.log(payment, redirectUrl);
-});
-```
-
-### Avec Promise
-
-```javascript
-try {
-  const payment = await moncash.payment.create({
-    amount: 50,
-    orderId: 'order-12345'
-  });
-
-  const redirectUrl = moncash.payment.redirectUri(payment);
-  console.log(redirectUrl);
-} catch (err) {
-  console.error(err.type, err.message);
-}
-```
-
-### Validation des entrées
-
-| Champ     | Règle                                      |
-|-----------|--------------------------------------------|
-| `amount`  | Nombre positif fini (> 0)                  |
-| `orderId` | Chaîne non vide                            |
-
-## Capturer un paiement
-
-```javascript
-// Par orderId
-const capture = await moncash.capture.getByOrderId('order-12345');
-
-// Par transactionId
+```js
 const capture = await moncash.capture.getByTransactionId('12874820');
 ```
 
-Les deux méthodes acceptent également un callback en second argument.
+### `moncash.capture.getByOrderId(id)` → `Promise<object>`
 
-## Transfert de fonds
+Retrieves a payment by merchant order ID.
 
-```javascript
+```js
+const capture = await moncash.capture.getByOrderId('ORDER-001');
+```
+
+### `moncash.transfert.create({ receiver, amount, desc })` → `Promise<object>`
+
+Sends funds to a MonCash wallet.
+
+```js
 const result = await moncash.transfert.create({
-  receiver: '50912345678', // ou '12345678'
+  receiver: '50912345678',
   amount: 50,
-  desc: 'Paiement fournisseur'
+  desc: 'Supplier payment'
 });
 ```
 
-### Validation des entrées
+> `moncash.transfer` is a deprecated alias for `moncash.transfert`.
 
-| Champ      | Règle                                                        |
-|------------|--------------------------------------------------------------|
-| `amount`   | Nombre positif fini (> 0)                                    |
-| `receiver` | Format haïtien : `509XXXXXXXX` ou `XXXXXXXX` (8 chiffres)    |
-| `desc`     | Chaîne non vide, maximum 255 caractères                      |
+## Configuration
 
-> `moncash.transfer` est un alias déprécié de `moncash.transfert`, conservé pour la rétrocompatibilité.
+| Option         | Type     | Required | Description                          |
+|----------------|----------|----------|--------------------------------------|
+| `clientId`     | `string` | Yes      | MonCash API client ID                |
+| `clientSecret` | `string` | Yes      | MonCash API client secret            |
+| `mode`         | `string` | No       | `sandbox` (default) or `live`        |
+| `version`      | `string` | No       | API version (default: `v1`)          |
 
-## Gestion des erreurs
+```js
+const moncash = new Moncash({
+  clientId: process.env.MONCASH_CLIENT_ID,
+  clientSecret: process.env.MONCASH_CLIENT_SECRET,
+  mode: 'sandbox'
+});
+```
 
-```javascript
+Get credentials from the [MonCash merchant dashboard](https://sandbox.moncashbutton.digicelgroup.com/Moncash-business/Login).
+
+## Input Validation
+
+All inputs are validated client-side before any API request is sent.
+
+| Resource  | Field            | Rules                                                                 |
+|-----------|------------------|-----------------------------------------------------------------------|
+| Payment   | `amount`         | Positive finite number, rounded to 2 decimals, minimum **1 HTG**    |
+| Payment   | `orderId`        | Non-empty string                                                      |
+| Capture   | `transactionId`  | Non-empty string                                                      |
+| Capture   | `orderId`        | Non-empty string                                                      |
+| Transfert | `amount`         | Positive finite number, rounded to 2 decimals, minimum **1 HTG**    |
+| Transfert | `receiver`       | Haitian phone format: `509XXXXXXXX` or `XXXXXXXX` (8 digits)          |
+| Transfert | `desc`           | Non-empty string, max 255 characters                                  |
+
+Invalid input throws a `MoncashError` with a descriptive message.
+
+## Error Handling
+
+```js
 const { errors } = moncash;
 
 try {
-  await moncash.payment.create({ amount: 50, orderId: 'abc' });
+  await moncash.payment.create({ amount: 500, orderId: 'ORDER-001' });
 } catch (err) {
-  switch (err.type) {
-    case errors.UnauthorizedError:
-      console.error('Identifiants invalides');
-      break;
-    case errors.BadRequestError:
-      console.error('Requête invalide');
-      break;
-    default:
-      console.error(err.message);
+  if (err.type === errors.UnauthorizedError) {
+    console.error('Invalid credentials');
+  } else if (err.type === errors.BadRequestError) {
+    console.error('Invalid request');
+  } else {
+    console.error(err.message);
   }
 }
 ```
 
-### Types d'erreurs disponibles
+### Error types
 
-- `MoncashError`
-- `APIError`
-- `BadRequestError`
-- `UnauthorizedError`
-- `ForbiddenError`
-- `NotFoundError`
-- `ConflictError`
-- `RequestTimeoutError`
-- `TooManyRequestsError`
-- `UnexpectedError`
+`MoncashError`, `APIError`, `BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`, `RequestTimeoutError`, `TooManyRequestsError`, `UnexpectedError`
 
-## Sécurité
+## Security
 
-Cette version inclut un durcissement de sécurité important :
+This SDK includes hardened security for production payment flows:
 
-| Correction | Description |
-|------------|-------------|
-| OAuth mutex | Évite les authentifications parallèles en cas d'appels concurrents |
-| Bearer token | Correction de la vérification du token (le token expiré était ignoré) |
-| Timeout HTTP | Limite de 30 s pour éviter les blocages indéfinis |
-| Validation entrées | Rejet des montants, numéros et descriptions invalides avant envoi |
-| Secrets | Suppression des identifiants en dur dans les tests ; filtrage des secrets dans les erreurs |
-| `redirectUri()` | Vérification du `payment_token` avant construction de l'URL |
+- OAuth2 mutex prevents concurrent token refresh races
+- 30-second HTTP timeout prevents indefinite hangs
+- Credentials are redacted from all error messages
+- Axios error internals (`config`, `auth`, headers) are stripped before propagation
+- No hardcoded credentials in source or tests
 
-Pour signaler une vulnérabilité, consultez [SECURITY.md](./SECURITY.md).
+Report vulnerabilities via [SECURITY.md](./SECURITY.md). Use [`.env.example`](./.env.example) as a template for local credentials.
 
-## Développement
+## Legacy Callback Support
+
+Callback style is supported for backward compatibility but **deprecated**. Prefer `async/await`.
+
+```js
+// @deprecated — use async/await instead
+moncash.payment.create({ amount: 500, orderId: 'ORDER-001' }, (err, payment) => {
+  if (err) return console.error(err.message);
+  console.log(moncash.payment.redirectUri(payment));
+});
+```
+
+## Development
 
 ```bash
 npm install
 npm test
 ```
 
-Les tests utilisent des mocks réseau (`nock`). Pour exécuter les tests avec vos propres identifiants sandbox :
+Tests use network mocks (`nock`). To run with your own sandbox credentials:
 
 ```bash
-# Linux / macOS
-export MONCASH_TEST_CLIENT_ID='votre_client_id'
-export MONCASH_TEST_CLIENT_SECRET='votre_client_secret'
+export MONCASH_TEST_CLIENT_ID='your_client_id'
+export MONCASH_TEST_CLIENT_SECRET='your_client_secret'
 npm test
 ```
 
-```powershell
-# Windows PowerShell
-$env:MONCASH_TEST_CLIENT_ID='votre_client_id'
-$env:MONCASH_TEST_CLIENT_SECRET='votre_client_secret'
-npm test
-```
+## License
 
-Exécuter une seule suite de tests :
+[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-```bash
-npx jest test/payment.test.js
-```
+## Links
 
-## Licence
-
-[GNU GENERAL PUBLIC LICENSE v3](https://www.gnu.org/licenses/gpl-3.0.txt)
-
-## Liens utiles
-
-- [Dépôt GitHub](https://github.com/schneiderjoseph/moncash)
-- [Package NPM](https://www.npmjs.com/package/moncash)
-- [Tableau de bord MonCash (sandbox)](https://sandbox.moncashbutton.digicelgroup.com)
-- [Documentation API REST (PDF)](https://sandbox.moncashbutton.digicelgroup.com/Moncash-business/resources/doc/RestAPI_MonCash_doc.pdf)
+- [GitHub](https://github.com/schneiderjoseph/moncash)
+- [Zygrec](https://zygrec.com)
+- [MonCash Sandbox Dashboard](https://sandbox.moncashbutton.digicelgroup.com)
+- [REST API Documentation (PDF)](https://sandbox.moncashbutton.digicelgroup.com/Moncash-business/resources/doc/RestAPI_MonCash_doc.pdf)

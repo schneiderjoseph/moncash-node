@@ -1,7 +1,7 @@
 {
-  "name": "moncash",
-  "version": "0.1.6",
-  "description": "nodejs moncash API wrapper",
+  "name": "@zygrec/moncash",
+  "version": "1.0.0",
+  "description": "The secure, official-quality Node.js SDK for Digicel MonCash payments in Haiti",
   "main": "index.js",
   "publishConfig": {
     "access": "public"
@@ -15,11 +15,19 @@
   "keywords": [
     "moncash",
     "digicel",
-    "API",
-    "payment processing"
+    "haiti",
+    "payment",
+    "api",
+    "sdk",
+    "monnaie",
+    "htg"
   ],
-  "author": "Freedy Meritus <meritusfreedy@gmail.com>",
+  "author": "Schneider Joseph <contact@zygrec.com>",
   "license": "GPL-3.0 License",
+  "homepage": "https://zygrec.com",
+  "bugs": {
+    "url": "https://github.com/schneiderjoseph/moncash/issues"
+  },
   "dependencies": {
     "axios": "^1.6.8"
   },
