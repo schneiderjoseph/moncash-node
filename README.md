@@ -1,3 +1,5 @@
+![MonCash](./assets/moncash-logo.png)
+
 # @zygrec/moncash
 
 > Le SDK Node.js sécurisé pour Digicel MonCash — conçu pour Haïti 🇭🇹
@@ -9,6 +11,8 @@
 [![tests](https://img.shields.io/badge/tests-18%20passing-brightgreen.svg)](https://github.com/schneiderjoseph/moncash)
 
 Official-quality Node.js wrapper for the [Digicel MonCash API](https://sandbox.moncashbutton.digicelgroup.com). Handles OAuth2 authentication, payment creation, transaction capture, and fund transfers in HTG.
+
+**Demo app :** [github.com/schneiderjoseph/moncash-demo/node](https://github.com/schneiderjoseph/moncash-demo/tree/main/node)
 
 ## Installation
 
@@ -227,6 +231,7 @@ npm test
 
 ## Links
 
+- [Demo Node.js](https://github.com/schneiderjoseph/moncash-demo/tree/main/node)
 - [GitHub](https://github.com/schneiderjoseph/moncash)
 - [Zygrec](https://zygrec.com)
 - [MonCash Sandbox Dashboard](https://sandbox.moncashbutton.digicelgroup.com)
