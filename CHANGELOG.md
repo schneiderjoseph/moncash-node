@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0] - 2026-06-09
+
+### Added
+
+- `moncash.customer.getStatus(account)` — check MonCash account registration status
+- `moncash.prefunded.getTransactionStatus(reference)` — track prefunded transfers
+- `moncash.prefunded.getBalance()` — read merchant prefunded balance (GET)
+- Hardened `Request.get()` with OAuth mutex, timeout, and credential stripping
+- Shared validation module `lib/utils/validate.js`
+- `reference` field on `transfert.create()` (required, idempotency key)
+- 20 new tests (38 total) covering validation, customer, prefunded, and GET security
+- Payout and prefunded account documentation in README and SECURITY.md
+
+### Changed
+
+- `transfert.create()` now requires `reference` and sends only validated fields
+- Capture and payment validators centralized via `validate.js`
+- Order/transaction IDs now enforce max 128 characters
+
 ## [1.0.1] - 2026-06-09
 
 ### Added

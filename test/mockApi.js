@@ -61,8 +61,53 @@ function mockCaptureByTransactionId() {
  */
 function mockTransfertError() {
     return nock(SANDBOX_BASE)
-        .post('/Api/v1/Transfert')
+        .post('/Api/v1/Transfert', (body) => {
+            return body.amount === 50 &&
+                body.receiver === '50900000000' &&
+                body.desc === 'test' &&
+                body.reference === 'TX-TEST-001';
+        })
         .reply(400, { message: 'Transfer failed' });
+}
+
+/**
+ * Mock customer status endpoint.
+ * @returns {import('nock').Scope}
+ */
+function mockCustomerStatus() {
+    return nock(SANDBOX_BASE)
+        .post('/Api/v1/CustomerStatus')
+        .reply(200, { status: 'ACTIVE' });
+}
+
+/**
+ * Mock prefunded transaction status endpoint.
+ * @returns {import('nock').Scope}
+ */
+function mockPrefundedStatus() {
+    return nock(SANDBOX_BASE)
+        .post('/Api/v1/PrefundedTransactionStatus')
+        .reply(200, { status: 'SUCCESS', reference: 'TX-001' });
+}
+
+/**
+ * Mock prefunded transaction status not found.
+ * @returns {import('nock').Scope}
+ */
+function mockPrefundedStatusNotFound() {
+    return nock(SANDBOX_BASE)
+        .post('/Api/v1/PrefundedTransactionStatus')
+        .reply(404, { message: 'Not found' });
+}
+
+/**
+ * Mock prefunded balance endpoint.
+ * @returns {import('nock').Scope}
+ */
+function mockPrefundedBalance() {
+    return nock(SANDBOX_BASE)
+        .get('/Api/v1/PrefundedBalance')
+        .reply(200, { balance: 10000 });
 }
 
 /**
@@ -78,5 +123,9 @@ module.exports = {
     mockCaptureByOrderId,
     mockCaptureByTransactionId,
     mockTransfertError,
+    mockCustomerStatus,
+    mockPrefundedStatus,
+    mockPrefundedStatusNotFound,
+    mockPrefundedBalance,
     cleanAll
 };

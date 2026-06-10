@@ -8,9 +8,9 @@
 
 [![npm version](https://img.shields.io/npm/v/@zygrec/moncash.svg)](https://www.npmjs.com/package/@zygrec/moncash)
 [![license](https://img.shields.io/npm/l/@zygrec/moncash.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
-[![tests](https://img.shields.io/badge/tests-18%20passing-brightgreen.svg)](https://github.com/schneiderjoseph/moncash)
+[![tests](https://img.shields.io/badge/tests-38%20passing-brightgreen.svg)](https://github.com/schneiderjoseph/moncash)
 
-Official-quality Node.js wrapper for the [Digicel MonCash API](https://sandbox.moncashbutton.digicelgroup.com). Handles OAuth2 authentication, payment creation, transaction capture, and fund transfers in HTG.
+Official-quality Node.js wrapper for the [Digicel MonCash API](https://sandbox.moncashbutton.digicelgroup.com). Handles OAuth2 authentication, payment creation, transaction capture, fund transfers, customer status checks, and prefunded account operations in HTG.
 
 **Demo app :** [github.com/schneiderjoseph/moncash-demo/node](https://github.com/schneiderjoseph/moncash-demo/tree/main/node)
 
@@ -85,19 +85,44 @@ Retrieves a payment by merchant order ID.
 const capture = await moncash.capture.getByOrderId('ORDER-001');
 ```
 
-### `moncash.transfert.create({ receiver, amount, desc })` → `Promise<object>`
+### `moncash.transfert.create({ receiver, amount, desc, reference })` → `Promise<object>`
 
-Sends funds to a MonCash wallet.
+Sends funds to a MonCash wallet. **Backend-only** — payouts are irreversible.
 
 ```js
 const result = await moncash.transfert.create({
   receiver: '50912345678',
   amount: 50,
-  desc: 'Supplier payment'
+  desc: 'Supplier payment',
+  reference: 'TX-001' // unique per transfer (idempotency key)
 });
 ```
 
 > `moncash.transfer` is a deprecated alias for `moncash.transfert`.
+
+### `moncash.customer.getStatus(account)` → `Promise<object>`
+
+Checks whether a phone number is registered on MonCash. **Backend-only** — do not expose from a public frontend (account enumeration risk).
+
+```js
+const status = await moncash.customer.getStatus('50912345678');
+```
+
+### `moncash.prefunded.getTransactionStatus(reference)` → `Promise<object>`
+
+Tracks a prefunded transfer by merchant reference. Requires a prefunded account activated by Digicel.
+
+```js
+const status = await moncash.prefunded.getTransactionStatus('TX-001');
+```
+
+### `moncash.prefunded.getBalance()` → `Promise<object>`
+
+Returns the merchant prefunded account balance. **Backend-only** — sensitive financial data.
+
+```js
+const balance = await moncash.prefunded.getBalance();
+```
 
 ## Pay with MonCash Button
 
@@ -155,14 +180,35 @@ All inputs are validated client-side before any API request is sent.
 | Resource  | Field            | Rules                                                                 |
 |-----------|------------------|-----------------------------------------------------------------------|
 | Payment   | `amount`         | Positive finite number, rounded to 2 decimals, minimum **1 HTG**    |
-| Payment   | `orderId`        | Non-empty string                                                      |
-| Capture   | `transactionId`  | Non-empty string                                                      |
-| Capture   | `orderId`        | Non-empty string                                                      |
+| Payment   | `orderId`        | Non-empty string, max 128 characters                                  |
+| Capture   | `transactionId`  | Non-empty string, max 128 characters                                  |
+| Capture   | `orderId`        | Non-empty string, max 128 characters                                  |
 | Transfert | `amount`         | Positive finite number, rounded to 2 decimals, minimum **1 HTG**    |
 | Transfert | `receiver`       | Haitian phone format: `509XXXXXXXX` or `XXXXXXXX` (8 digits)          |
 | Transfert | `desc`           | Non-empty string, max 255 characters                                  |
+| Transfert | `reference`      | Non-empty string, max 64 chars, alphanumeric + `-_` only (required) |
+| Customer  | `account`        | Haitian phone format: `509XXXXXXXX` or `XXXXXXXX`                     |
+| Prefunded | `reference`      | Non-empty string, max 64 chars, alphanumeric + `-_` only            |
 
 Invalid input throws a `MoncashError` with a descriptive message.
+
+## Payouts and Prefunded Account
+
+| Operation | Direction | Risk |
+|-----------|-----------|------|
+| `payment.create` | Customer pays merchant | Low — standard checkout |
+| `transfert.create` | Merchant sends HTG to wallet | **High** — irreversible |
+| `customer.getStatus` | Check if wallet exists | Medium — PII enumeration |
+| `prefunded.getBalance` | Read merchant balance | **High** — sensitive data |
+
+**Rules:**
+
+- Never call `transfert`, `customer`, or `prefunded` from a public frontend — server-side only.
+- `reference` must be **unique per transfer** — reusing it may cause conflicts on the MonCash side.
+- Prefunded account must be activated by Digicel before payouts work.
+- Test payouts in **sandbox only** — never send real funds during development.
+- If a transfer fails with a 403 "Maximum Account Balance", the recipient wallet has reached its balance limit.
+- Always verify `prefunded.getTransactionStatus(reference)` before retrying a failed payout.
 
 ## Error Handling
 
