@@ -1,6 +1,6 @@
 {
   "name": "@zygrec/moncash",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "The secure, official-quality Node.js SDK for Digicel MonCash payments in Haiti",
   "main": "index.js",
   "files": [

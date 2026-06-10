@@ -89,6 +89,8 @@ const capture = await moncash.capture.getByOrderId('ORDER-001');
 
 Sends funds to a MonCash wallet. **Backend-only** — payouts are irreversible.
 
+> **Business account required** — or ask Digicel to enable on sandbox.
+
 ```js
 const result = await moncash.transfert.create({
   receiver: '50912345678',
@@ -104,6 +106,8 @@ const result = await moncash.transfert.create({
 
 Checks whether a phone number is registered on MonCash. **Backend-only** — do not expose from a public frontend (account enumeration risk).
 
+> **Business account required** — or ask Digicel to enable on sandbox.
+
 ```js
 const status = await moncash.customer.getStatus('50912345678');
 ```
@@ -112,6 +116,8 @@ const status = await moncash.customer.getStatus('50912345678');
 
 Tracks a prefunded transfer by merchant reference. Requires a prefunded account activated by Digicel.
 
+> **Business account required** — or ask Digicel to enable on sandbox.
+
 ```js
 const status = await moncash.prefunded.getTransactionStatus('TX-001');
 ```
@@ -119,6 +125,8 @@ const status = await moncash.prefunded.getTransactionStatus('TX-001');
 ### `moncash.prefunded.getBalance()` → `Promise<object>`
 
 Returns the merchant prefunded account balance. **Backend-only** — sensitive financial data.
+
+> **Business account required** — or ask Digicel to enable on sandbox.
 
 ```js
 const balance = await moncash.prefunded.getBalance();
@@ -200,6 +208,8 @@ Invalid input throws a `MoncashError` with a descriptive message.
 | `transfert.create` | Merchant sends HTG to wallet | **High** — irreversible |
 | `customer.getStatus` | Check if wallet exists | Medium — PII enumeration |
 | `prefunded.getBalance` | Read merchant balance | **High** — sensitive data |
+
+> **Business account required** for `transfert`, `prefunded`, and `customer` — or ask Digicel to enable on sandbox.
 
 **Rules:**
 

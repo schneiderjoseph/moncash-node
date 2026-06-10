@@ -40,6 +40,10 @@ Please do not disclose the vulnerability publicly until a fix has been released 
 - Never expose transfer endpoints from a public frontend.
 - Test exclusively in sandbox mode during development.
 
+### Business account required
+
+Payout endpoints (`transfert`, `prefunded`, `customer`) require a MonCash business account — or ask Digicel to enable on sandbox.
+
 ## PII and Account Enumeration
 
 `moncash.customer.getStatus()` reveals whether a phone number is registered on MonCash. Calling this from a public frontend allows attackers to enumerate valid MonCash accounts.
